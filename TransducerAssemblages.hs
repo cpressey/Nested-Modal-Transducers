@@ -10,7 +10,7 @@ module TransducerAssemblages where
 
 -- First, a simple function to express our illustrative tests:
 -- Given a list of pairs, show those pairs that are not equal.
--- Anything other than an empty lists returns indicates a mistake.
+-- Anything other than an empty list returned indicates a mistake.
 
 expect [] = []
 expect ((a, b):rest) = if a == b then expect rest else ((a, b):expect rest)
@@ -109,7 +109,7 @@ twoLightTransducer = combineTransducers lightTransducer lightTransducer
 
 testCombinedTransducer = expect
   [
-    (rehearse twoLightTransducer (On, Off) [TurnOff],                  ((Off,Off),[])),
+    (rehearse twoLightTransducer (On, Off) [TurnOff],         ((Off,Off),[])),
     (rehearse twoLightTransducer (On, Off) [TurnOff, TurnOn], ((On,On),[RingBell,RingBell]))
   ]
 
@@ -117,8 +117,8 @@ testCombinedTransducer = expect
 -- Extended state
 --
 -- (This is where we start using the word "configs" instead of "states", but don't get confused:
--- the term "configuration" comes from modern automata theory and refers to
--- the state of the entire machine.  Configuration = mode ("finite state") + data ("extended state").)
+-- the term "configuration" comes from modern automata theory and refers to the state of the
+-- entire machine.  Configuration = mode ("finite state variable") + data ("extended state").)
 --
 
 data LightConfig = LightConfig LightMode Integer deriving (Show, Ord, Eq)
