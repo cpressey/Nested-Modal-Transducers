@@ -202,7 +202,8 @@ is, at its core, one big reducer.
 
 Redux defines a standard way to combine multiple reducers into a single
 reducer. This standard way is not the only way to compose reducers,
-but it establishes a pattern and a practice.
+and in many contexts it is probably not the "best" way either, but it
+establishes a pattern and a practice.
 
 The analogous thing here is combining transducers.  But there is an
 important difference from reducers: insofar as the order of effects
@@ -304,8 +305,8 @@ tO has configuration cO made up of mode mO and data dO.  Now we can say:
 A description of cI is embedded in some manner in dO, and
 we can think of this embedding as a pair of functions:
 
-> extractInner : cO → cI  
-> embedInner : cO × cI → cO′
+> _extractInner_ : cO → cI  
+> _embedInner_ : cO × cI → cO′
 
 These have the usual form of "get" and "put" operations on a data
 structure in a purely functional language.  Embedding cI in cO results
@@ -469,8 +470,11 @@ to C/C++), or as the responsibility of a state machine
 But if we want to directly write (and compose) functions that
 describe this behaviour, neither of those options is available to us.
 
-I don't pretend to have an optimal solution for this, but I do want
-to show that it is not an insurmountable problem.
+I don't pretend to have an optimal solution for this.  I'm not too
+fussed about that, because having the equivalent of exit and entry actions
+wasn't one of the four requirements listed in the first section.  They
+would be "nice to have" though, so I would like to show that retaining
+them is not an insurmountable problem.
 
 What we can do, is define a higher-order function _h_ which takes a
 transducer _t_ and returns a transducer _t′_ that transitions in
@@ -550,7 +554,7 @@ on in the world around it.  For example, in a GUI, "hover" and
 same physical action (moving the mouse).  The only difference is
 the context in which the physical action occurs.
 
-Synthesized inputs are desirable because they allows the machine to deal
+Synthesized inputs are desirable because they allow the machine to deal
 with the world outside it at an appropriate level of abstraction.  While
 I'm sure it's possible to make UML state machines that synthesize inputs
 and respond to synthesized inputs, I'm also not aware of any UML features
