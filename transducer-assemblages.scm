@@ -306,3 +306,53 @@
   )
 )))
 (newline)
+
+
+;
+; Synthesized events
+;
+
+(define make-gui-input-synthesizing-transducer
+  (lambda (t)
+    (lambda (config input)
+      (let* ((mode (car config)))
+        (cond
+          ((and (equal? mode 'mouse-down) (list? input) (equal? (car input) 'mouse-move))
+            (t config (list 'drag (cadr input) (caddr input))))
+          (else
+            (t config input)))))))
+
+(define base-gui-transducer
+  (lambda (config input)
+    (let* ((mode       (car config))
+           (x          (cadr config))
+           (y          (caddr config))
+           (transition (list mode input)))
+      (cond
+        ((equal? transition '(mouse-down mouse-release))
+          (list (list 'mouse-up x y) '()))
+        ((equal? transition '(mouse-up mouse-press))
+          (list (list 'mouse-down x y) (list (list 'show-click x y))))
+        ((equal? (car input) 'mouse-move)
+          (let* ((new-x (cadr input)) (new-y (caddr input)))
+            (list (list mode new-x new-y) '())))
+        ((equal? (car input) 'drag)
+          (let* ((new-x (cadr input)) (new-y (caddr input)))
+            (list (list mode new-x new-y) (list (list 'show-hand new-x new-y)))))
+        (else
+          (list (list mode x y) '()))))))
+
+(define gui-transducer (make-gui-input-synthesizing-transducer base-gui-transducer))
+
+
+(display (expect (list
+  (cons
+    (rehearse gui-transducer '(mouse-up 0 0) '((mouse-move 10 10) mouse-press mouse-release))
+    '((mouse-up 10 10) ((show-click 10 10)))
+  )
+  (cons
+    (rehearse gui-transducer '(mouse-up 0 0) '(mouse-press (mouse-move 10 10) mouse-release))
+    '((mouse-up 10 10) ((show-click 0 0) (show-hand 10 10)))
+  )
+)))
+(newline)
