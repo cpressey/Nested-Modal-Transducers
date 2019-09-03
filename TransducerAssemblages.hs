@@ -1,8 +1,13 @@
 module TransducerAssemblages where
 
 --
--- Runnable example code to accompany the write-up in README.md.
---
+-- Runnable example code, in Haskell, to accompany the article
+-- about Nested Modal Transducer Assemblages.
+-- 
+-- Example usage: install GHC, then run
+--     ghc TransducerAssemblages.hs -e testAll
+-- to run all the tests.  All tests passed if the output is only `[]`.
+-- 
 -- All of this code is in the public domain.  Do what you like with it.
 --
 
@@ -183,7 +188,7 @@ testDoor = expect
 -- Array of orthogonal regions - a list of lights are behind a barn door.
 --
 
-transduceAll t input [] acc = acc
+transduceAll t input [] (accConfigs, accOutputs) = (reverse accConfigs, accOutputs)
 transduceAll t input (config:configs) (accConfigs, accOutputs) =
     let
         (config', outputs) = t config input
@@ -212,7 +217,7 @@ testBarn = expect
   [
     (rehearse barnTransducer barnConfig1 [Open],                             (BarnConfig Opened [LightConfig Off 0,LightConfig On 0],[])),
     (rehearse barnTransducer barnConfig1 [LightInput TurnOn],                (BarnConfig Closed [LightConfig Off 0,LightConfig On 0],[])),
-    (rehearse barnTransducer barnConfig1 [Open, (LightInput TurnOn), Close], (BarnConfig Closed [LightConfig On 0,LightConfig On 1],[LightOutput RingBell])),
+    (rehearse barnTransducer barnConfig1 [Open, (LightInput TurnOn), Close], (BarnConfig Closed [LightConfig On 1,LightConfig On 0],[LightOutput RingBell])),
     (rehearse barnTransducer barnConfig2 [Open, (LightInput TurnOn), Close], (BarnConfig Closed [LightConfig On 1,LightConfig On 1],[LightOutput RingBell,LightOutput RingBell]))
   ]
   where

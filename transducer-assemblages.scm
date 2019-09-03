@@ -1,9 +1,10 @@
 ;
-; Runnable example code to accompany the write-up in README.md.
+; Runnable example code, in R5RS Scheme, to accompany the article
+; about Nested Modal Transducer Assemblages.
 ;
 ; Example usage: install Chicken Scheme, then run
-;     csi transducer-assembagles
-; to run all the tests.
+;     csi -q -b transducer-assembagles
+; to run all the tests.  All tests passed if the output is only `()`'s.
 ;
 ; All of this code is in the public domain.  Do what you like with it.
 ;
@@ -172,7 +173,7 @@
 (display (expect (list
   (cons
     (rehearse door-transducer '(closed (off 0)) '(open))
-    '((closed (off 0)) ())
+    '((opened (off 0)) ())
   )
   (cons
     (rehearse door-transducer '(closed (off 0)) '(turn-on))
@@ -181,6 +182,63 @@
   (cons
     (rehearse door-transducer '(closed (off 0)) '(open turn-on close))
     '((closed (on 1)) (ring-bell))
+  )
+)))
+(newline)
+
+;
+; Array of orthogonal regions - a list of lights are behind a barn door.
+;
+
+(define transduce-all
+  (lambda (t input configs acc)
+    (if (null? configs)
+      (list (reverse (car acc)) (cadr acc))
+      (let* ((config        (car configs))
+             (rest-configs  (cdr configs))
+             (acc-configs   (car acc))
+             (acc-outputs   (cadr acc))
+             (result        (t config input))
+             (new-config    (car result))
+             (these-outputs (cadr result))
+             (new-acc       (list (cons new-config acc-configs) (append these-outputs acc-outputs))))
+        (transduce-all t input rest-configs new-acc)))))
+
+(define barn-transducer
+  (lambda (config input)
+    (let* ((mode          (car config))
+           (light-configs (cadr config))
+           (transition    (list mode input)))
+      (cond
+        ((equal? transition '(closed open))
+          (list (list 'opened light-configs) '()))
+        ((equal? transition '(opened close))
+          (list (list 'closed light-configs) '()))
+        ((equal? mode 'opened)
+          (let* ((inner-results     (transduce-all counting-light-transducer input light-configs '(() ())))
+                 (new-light-configs (car inner-results))
+                 (light-outputs     (cadr inner-results)))
+            (list (list mode new-light-configs) light-outputs)))
+        (else
+          (list config '()))))))
+
+
+(display (expect (list
+  (cons
+    (rehearse barn-transducer '(closed  ((off 0) (on 0)) ) '(open))
+    '( (opened  ((off 0) (on 0)) ) ())
+  )
+  (cons
+    (rehearse barn-transducer '(closed  ((off 0) (on 0)) ) '(turn-on))
+    '( (closed  ((off 0) (on 0)) ) ())
+  )
+  (cons
+    (rehearse barn-transducer '(closed  ((off 0) (on 0)) ) '(open turn-on close))
+    '( (closed  ((on 1) (on 0)) ) (ring-bell))
+  )
+  (cons
+    (rehearse barn-transducer '(closed  ((off 0) (off 0)) ) '(open turn-on close))
+    '( (closed  ((on 1) (on 1)) ) (ring-bell ring-bell))
   )
 )))
 (newline)
