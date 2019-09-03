@@ -242,3 +242,67 @@
   )
 )))
 (newline)
+
+
+;
+; Entry and exit actions
+;
+; Like the article says, we don't pretend to have a good solution, we only
+; want to show that it is possible.
+;
+; door-transducer-2 is the same as door-transducer except that the
+; counting-light-transducer nested within it, is decorated with
+; add-entry-exit-outputs.
+;
+
+(define add-entry-exit-outputs
+  (lambda (t config input)
+    (let* ((old-mode      (car config))
+           (result        (t config input))
+           (new-config    (car result))
+           (new-mode      (car new-config))
+           (new-data      (cadr new-config))
+           (outputs       (cadr result))
+           (exit-outputs  (if (equal? old-mode 'off) '(buzz-buzzer) '()))
+           (entry-outputs (if (equal? new-mode 'closed) '(blow-horn) '()))
+           (new-outputs   (append exit-outputs outputs entry-outputs)))
+      (list new-config new-outputs))))
+
+(define door-transducer-2
+  (lambda (config input)
+    (let* ((mode         (car config))
+           (light-config (cadr config))
+           (transition   (list mode input)))
+      (cond
+        ((equal? transition '(closed open))
+          (list (list 'opened light-config) '()))
+        ((equal? transition '(opened close))
+          (list (list 'closed light-config) '()))
+        ((equal? mode 'opened)
+          (let* ((inner-result     (add-entry-exit-outputs counting-light-transducer light-config input))
+                 (new-light-config (car inner-result))
+                 (light-outputs    (cadr inner-result)))
+            (list (list mode new-light-config) light-outputs)))
+        (else
+          (list config '()))))))
+
+(define deco-door-transducer
+  (lambda (config input)
+    (add-entry-exit-outputs door-transducer-2 config input)))
+
+
+(display (expect (list
+  (cons
+    (rehearse deco-door-transducer '(closed (off 0)) '(open))
+    '((opened (off 0)) ())
+  )
+  (cons
+    (rehearse deco-door-transducer '(closed (off 0)) '(turn-on))
+    '((closed (off 0)) (blow-horn))
+  )
+  (cons
+    (rehearse deco-door-transducer '(closed (off 0)) '(open turn-on close))
+    '((closed (on 1)) (buzz-buzzer ring-bell blow-horn))
+  )
+)))
+(newline)

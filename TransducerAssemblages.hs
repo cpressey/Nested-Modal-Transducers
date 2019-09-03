@@ -24,7 +24,7 @@ expect ((a, b):rest) = if a == b then expect rest else ((a, b):expect rest)
 
 data LightMode = On | Off deriving (Show, Ord, Eq)
 data LightInput = TurnOn | TurnOff deriving (Show, Ord, Eq)
-data LightOutput = RingBell | BuzzBuzzer deriving (Show, Ord, Eq)
+data LightOutput = RingBell | BuzzBuzzer | BlowHorn deriving (Show, Ord, Eq)
 
 --
 -- Purely functional definition of a simple transducer.
@@ -249,7 +249,7 @@ addEntryExitOutputsDoor t config@(DoorConfig mode _) input =
     let
         (config2@(DoorConfig mode2 data2), outputs) = t config input
         entryOutputs = case mode2 of
-            Closed -> [LightOutput BuzzBuzzer]
+            Closed -> [LightOutput BlowHorn]
             _ -> []
         outputs2 = outputs ++ entryOutputs
     in
@@ -276,9 +276,9 @@ decoDoorTransducer = addEntryExitOutputsDoor t where
 testDecoDoorTransducer = expect
   [
     (rehearseIt [Open],                             (DoorConfig Opened (LightConfig Off 0),[])),
-    (rehearseIt [LightInput TurnOn],                (DoorConfig Closed (LightConfig Off 0),[LightOutput BuzzBuzzer])),
+    (rehearseIt [LightInput TurnOn],                (DoorConfig Closed (LightConfig Off 0),[LightOutput BlowHorn])),
     (rehearseIt [Open, (LightInput TurnOn), Close], (DoorConfig Closed (LightConfig On 1),
-      [LightOutput BuzzBuzzer,LightOutput RingBell,LightOutput BuzzBuzzer]))
+      [LightOutput BuzzBuzzer,LightOutput RingBell,LightOutput BlowHorn]))
   ]
   where
     rehearseIt = rehearse decoDoorTransducer initialDoorConfig
