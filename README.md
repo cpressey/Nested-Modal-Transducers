@@ -1,5 +1,5 @@
-Transducer assemblages
-======================
+Nested Modal Transducers
+========================
 
 *Final draft*
 
@@ -7,17 +7,22 @@ An experiment in reactive framework design that tries to answer the question:
 What happens if you take [UML state machines][] and make them
 purely functional by following [The Elm Architecture][]?
 
-We call the resulting construction a _functional transducer assemblage_.
+We call the resulting construction a _nested modal transducer assemblage_.
+"Nested" stresses embedding one transducer in another, as opposed to
+feeding the output of one transducer into the input of another; "modal"
+stresses that each transducer is, like a state machine, in exactly one
+of a finite number of control states at any given time.
 
-Code samples in this document are given in Haskell primarily because
-it serves decently as a purely functional pseudocode — its lazy evaluation
-and type system are basically irrelevant here and you can safely
-ignore them.  The example code in this article is available in a
-runnable form in the file [TransducerAssemblages.hs](TransducerAssemblages.hs).
+Code samples in this document are given in a purely functional pseudocode.
+Runnable code for these examples can be found in the accompanying source
+files:
+
+*   Haskell: [NestedModalTransducers.hs](NestedModalTransducers.hs)
+*   Scheme: [nested-modal-transducers.scm](nested-modal-transducers.scm)
 
 Note: this repository contains only a description of the theoretical
-framework.  Applications of the framework will be listed in the
-[Related resources](#related-resources) section below.
+framework.  Applications of the framework, should they ever come to pass,
+will be listed in the [Related resources](#related-resources) section below.
 
 Enriched state machines
 -----------------------
@@ -182,16 +187,16 @@ You would then expect that, for example,
 
 In a practical setting though, you probably want this to be "reactive",
 in that you want to consume inputs when they are received, and enact
-effects when they are produced.  Driver code for that might look like:
+effects when they are produced.  You would have some top-level driver
+code for that, and it might look like:
 
-    reactWith transducer state = do
-        input <- waitForInput
-        (state', outputs) <- return $ transducer state input
-        enactEffects outputs
-        reactWith transducer state'
-
-No need to dwell on this — hopefully you get the idea.
-[(Footnote 3)](#footnote-3)
+    reactWith transducer state =
+        let
+            input = waitForInput
+            (state', outputs) = transducer state input
+            _ = enactEffects outputs
+        in
+            reactWith transducer state'
 
 Combining purely functional transducers
 ---------------------------------------
@@ -208,7 +213,7 @@ establishes a pattern and a practice.
 The analogous thing here is combining transducers.  But there is an
 important difference from reducers: insofar as the order of effects
 matters, the order of outputs matters too, so the order in which
-transducers are combined matters. [(Footnote 4)](#footnote-4)
+transducers are combined matters. [(Footnote 3)](#footnote-3)
 This is the reason why we defined our transducers as producing lists
 of outputs: lists already capture this ordering property.
 The empty list is also useful for indicating that a transducer did
@@ -242,7 +247,7 @@ with the tools of the second section.
 
 This part is easy; in the functional theory that we've brought over from
 Redux, S is an arbitrary countable set, so we can stick whatever we want in
-there.  [(Footnote 5)](#footnote-5)
+there.  [(Footnote 4)](#footnote-4)
 
 Actually, the part we should be concerned about is the other way around:
 we want these transducers to behave, at their core, like traditional
@@ -270,26 +275,26 @@ one of these modes, and we will call that the _current mode_ (or just the _mode_
 the context is clear).   What UML calls the "extended state", we will call
 the _data_ of the transducer; and the state of the whole thing
 (mode and data together) we will call the _configuration_ of the transducer.
-[(Footnote 6)](#footnote-6)
+[(Footnote 5)](#footnote-5)
 
 In this way we can, in fact, completely avoid using the word "state" if we like.
 We might not go that far, because sometimes it is evokative, but we will go in
 this direction.  One concrete step in this direction is that, instead of
 "state machines", we will talk about "modal transducers".  Another concrete step
 is that the (nominal) datatypes that our example transducers will work with
-will no longer be `State`s, but rather `Config`s.
+will no longer be "state"s, but rather "config"s.
 
 Here we modify the previous example of the light, to make it record
 the number of times it was turned on:
 
-    countingLightTransducer (LightConfig mode count) input =
-        case (mode, input) of
+    countingLightTransducer config input =
+        case (config.mode, input) of
             (On, TurnOff) ->
-                (LightConfig Off count, [])
+                ({mode:Off, data:config.data}, [])
             (Off, TurnOn) ->
-                (LightConfig On (count + 1), [RingBell])
+                ({mode:On, data:config.data+1}, [RingBell])
             _ ->
-                (LightConfig mode count, [])
+                (config, [])
 
 ### Hierarchically nested states
 
@@ -339,8 +344,8 @@ To spell out how tO would typically manage the transition of tI:
 
 In pseudocode,
 
-    outerTransducer outerConfig@(Config mode data) input =
-        case (mode, input) of
+    outerTransducer outerConfig input =
+        case (outerConfig.mode, input) of
              ...
              (ContainingMode, _) ->
                  let
@@ -366,19 +371,20 @@ As a more concrete example, here is a transducer that represents
 a `countingLightTransducer` behind a door.  The `TurnOn` and `TurnOff`
 inputs will be sent to the light only when the door is open.
 
-    doorTransducer (DoorConfig mode lightConfig) input =
-        case (mode, input) of
+    doorTransducer config input =
+        case (config.mode, input) of
             (Closed, Open) ->
-                ((DoorConfig Opened lightConfig), [])
+                ({mode:Opened, data:config.data}, [])
             (Opened, Close) ->
-                ((DoorConfig Closed lightConfig), [])
+                ({mode:Closed, data:config.data}, [])
             (Opened, lightInput) ->
                 let
+                    lightConfig = config.data
                     (lightConfig', outputs) = countingLightTransducer lightConfig lightInput
                 in
-                    ((DoorConfig mode lightConfig'), outputs)
+                    ({mode:config.mode, data:lightConfig'}, outputs)
             _ ->
-                (DoorConfig mode lightConfig, [])
+                (config, [])
 
 ### Orthogonal regions
 
@@ -410,7 +416,7 @@ along with the list of outputs that were generated:
         in
             transduceAll t input configs newAcc
 
-Since this is a fold, it can also be written using `foldl`, but this too
+Since this is a fold, it can also be written using `fold`, but this too
 is left as an exercise for the reader.
 
 Using `transduceAll`, we can now give an example of a `barnTransducer` which
@@ -419,17 +425,19 @@ and `TurnOff` inputs will be sent to all of the lights (but only when the barn
 door is open), and every light will maintain its own counter and will contribute
 to the collective list of outputs as appropriate.
 
-    barnTransducer config@(BarnConfig mode lightConfigs) input =
-        case (mode, input) of
+    barnTransducer config input =
+        case (config.mode, input) of
             (Closed, Open) ->
-                ((BarnConfig Opened lightConfigs), [])
+                ({mode:Opened, data:config.data}, [])
             (Opened, Close) ->
-                ((BarnConfig Closed lightConfigs), [])
-            (Opened, LightInput lightInput) ->
+                ({mode:Closed, data:config.data}, [])
+            (Opened, lightInput) ->
                 let
-                    (lightConfigs', lightOutputs) = transduceAll (countingLightTransducer) lightInput lightConfigs ([], [])
+                    lightConfigs = config.data
+                    (lightConfigs', lightOutputs) =
+                      transduceAll (countingLightTransducer) lightInput lightConfigs ([], [])
                 in
-                    ((BarnConfig mode lightConfigs'), lightOutputs)
+                    ({mode:config.mode, data:lightConfigs'}, lightOutputs)
             _ ->
                 (config, [])
 
@@ -443,12 +451,12 @@ when you leave mode A you must do action X and when you
 enter mode B you must do action Y, you can simply specify
 those outputs during that transition.
 
-    someTransducer (Config mode data) input =
-        case (mode, input) of
+    someTransducer config input =
+        case (config.mode, input) of
             ...
             (ModeA, InputFoo) ->
                 let
-                    config' = (Config ModeB data)
+                    config' = {mode:ModeB, data:config.data}
                 in
                     (config', [ActionX, ActionY])
 
@@ -498,22 +506,22 @@ with this higher-order function _h_.
 
 Sketch:
 
-    addEntryExitOutputs t config@(Config mode data) input =
+    addEntryExitOutputs t config input =
         let
-            ((Config mode' data'), outputs) = t config input
-            exitOutputs = case mode of
+            (config', outputs) = t config input
+            exitOutputs = case config.mode of
                 SomeFromMode -> [SomeExitAction]
                 _ -> []
-            entryOutputs = case mode' of
+            entryOutputs = case config'.mode of
                 SomeToMode -> [SomeEntryAction]
                 _ -> []
             outputs' = exitOutputs ++ outputs ++ entryOutputs
         in
-            ((Config mode' data'), outputs')
+            (config', outputs')
 
 ##### Potential pitfalls
 
-I would like to stress that _all_ transducers in the assemblage
+I would like to stress that _all_ transducers in the hierarchy
 need to be "wrapped" with this higher-order function, otherwise
 there is the potential for some exit or entry action to be missed.
 
@@ -560,7 +568,7 @@ I'm sure it's possible to make UML state machines that synthesize inputs
 and respond to synthesized inputs, I'm also not aware of any UML features
 that are provided for that particular purpose.
 
-In our system of transducer assemblages, synthesizing inputs is
+In our system of nested transducers, synthesizing inputs is
 straightforward, as the outer transducer can provide whatever input it
 likes to the inner transducers that it manages.
 
@@ -569,10 +577,10 @@ a GUI will probably suffice.  (A full, runnable example can be
 found in [TransducerAssemblages.hs](TransducerAssemblages.hs).)
 
     makeGuiInputSynthesizingTransducer t = t' where
-        t' config@(GUIConfig mode x y) input =
-            case (mode, input) of
-                (MouseDown, MouseMove x' y') ->
-                    t config (Drag x' y')
+        t' config input =
+            case (config.mode, input.type) of
+                (MouseDown, MouseMove) ->
+                    t config (Drag input.x input.y)
                 _ ->
                     t config input
 
@@ -633,7 +641,7 @@ scheme for managing this inner configuration, such as "history".
 
 We have described a way to implement UML state machines
 (or at least, the parts of them that I like) as purely
-functional transducers. [(Footnote 7)](#footnote-7)
+functional transducers. [(Footnote 6)](#footnote-6)
 
 Neither of these ideas are very new, and I have a feeling that someone
 must have done something like this at some point, but if so, I have not
@@ -684,26 +692,19 @@ video games.  Do you have a problem with that?
 
 ##### Footnote 3
 
-We're using Haskell in this article mainly as purely functional
-pseudocode, to show that our transducers can be pure functions;
-delving into how Haskell handles effects would possibly be more
-distracting than enlightening here.
-
-##### Footnote 4
-
 In a reducer, the actions must be composable, i.e. they must form
 a monoid.  In a transducer, both the inputs must be composable,
 and the outputs must be composable.  Under reducer combination
 (Redux's `combineReducers`), reducers form a group, but under
 transducer combination, transducers form a monoid.
 
-##### Footnote 5
+##### Footnote 4
 
 Okay, not real numbers, obviously.  You're welcome to extend
 this model to uncountable sets if you _really_ want of course,
 it's just that I have no interest in that myself.
 
-##### Footnote 6
+##### Footnote 5
 
 "Configuration" is borrowed from modern automata theory, where it
 is used when describing Turing machines and such.  (Older texts
@@ -716,7 +717,7 @@ Note also that the term "modal transducer" also refers to a kind of
 electronic component, but generally I expect this will be disambiguated
 by context.
 
-##### Footnote 7
+##### Footnote 6
 
 And I am finally in a position to present a fully formal treatment of
 _Mr. Do_.

@@ -1,11 +1,11 @@
-module TransducerAssemblages where
+module NestedModalTransducers where
 
 --
 -- Runnable example code, in Haskell, to accompany the article
 -- about Nested Modal Transducer Assemblages.
 -- 
 -- Example usage: install GHC, then run
---     ghc TransducerAssemblages.hs -e testAll
+--     ghc NestedModalTransducers.hs -e testAll
 -- to run all the tests.  All tests passed if the output is only `[]`.
 -- 
 -- All of this code is in the public domain.  Do what you like with it.

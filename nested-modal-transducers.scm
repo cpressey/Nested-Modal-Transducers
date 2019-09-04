@@ -3,7 +3,7 @@
 ; about Nested Modal Transducer Assemblages.
 ;
 ; Example usage: install Chicken Scheme, then run
-;     csi -q -b transducer-assembagles
+;     csi -q -b nested-modal-transducers.scm
 ; to run all the tests.  All tests passed if the output is only `()`'s.
 ;
 ; All of this code is in the public domain.  Do what you like with it.
