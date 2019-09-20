@@ -7,7 +7,7 @@ purely functional by following [The Elm Architecture][]?
 
 We call the resulting construction a _nested modal transducer assemblage_.
 
-"Transducer" is taken from automata theory and is basically
+The term "transducer" is taken from automata theory and is basically
 unrelated to what's called a transducer
 [in Clojure](https://clojure.org/reference/transducers)
 or [in Scheme](https://srfi.schemers.org/srfi-171/srfi-171.html);
@@ -24,7 +24,7 @@ files:
 *   Haskell: [NestedModalTransducers.hs](NestedModalTransducers.hs)
 *   Scheme: [nested-modal-transducers.scm](nested-modal-transducers.scm)
 
-Note: this repository contains only a description of the theoretical
+Note that this repository contains only a description of the theoretical
 framework.  Applications of the framework, should they ever come to pass,
 will be listed in the [Related resources](#related-resources) section below.
 
@@ -66,8 +66,8 @@ when they are deeply nested in different parts of an outer state machine.
 
 But the facilities provided by UML for this purpose do have limitations.
 The root condition here is that UML state machines inhabit an imperative,
-effectful paradigm: just about _anything_ can trigger arbitrary
-"actions" which do not have limits to their scope.  So the transitioning
+effectful paradigm: just about _anything_ can trigger an arbitrary
+"action" which does not have limits to its scope.  So the transitioning
 of an inner machine may cause side-effects, and there is nothing the containing
 machine can do about this.
 
@@ -525,7 +525,7 @@ Sketch:
 
 ##### Potential pitfalls
 
-I would like to stress that _all_ transducers in the hierarchy
+I would like to stress that I think _all_ transducers in the hierarchy
 need to be "wrapped" with this higher-order function, otherwise
 there is the potential for some exit or entry action to be missed.
 
@@ -554,7 +554,7 @@ or otherwise act on them.  But I think one can make a good argument that,
 although outer transducers _can_ "manage" these exit and entry outputs
 like any other outputs, they generally _should not_ do so.  There are
 probably measures which can be taken to reduce the chance of doing so
-in error, but an investigation of these possibilities is beyond the
+in error, but an investigation of these possibilities is well beyond the
 scope of this article.
 
 #### Synthesizing inputs
@@ -568,7 +568,7 @@ the context in which the physical action occurs.
 
 Synthesized inputs are desirable because they allow the machine to deal
 with the world outside it at an appropriate level of abstraction.  While
-I'm sure it's possible to make UML state machines that synthesize inputs
+I'm sure it's possible to define UML state machines that synthesize inputs
 and respond to synthesized inputs, I'm also not aware of any UML features
 that are provided for that particular purpose.
 
@@ -577,8 +577,9 @@ straightforward, as the outer transducer can provide whatever input it
 likes to the inner transducers that it manages.
 
 A partial example illustrating the synthesizing of a "drag" event in
-a GUI will probably suffice.  (A full, runnable example can be
-found in [TransducerAssemblages.hs](TransducerAssemblages.hs).)
+a GUI will probably suffice.  (Full, runnable examples can be
+found in [NestedModalTransducers.hs](NestedModalTransducers.hs)
+and [nested-modal-transducers.scm](nested-modal-transducers.scm).)
 
     makeGuiInputSynthesizingTransducer t = t' where
         t' config input =
@@ -638,7 +639,7 @@ the outer transducer switches modes.  But the outer transducer
 also has access to it and could choose to reset it during
 such a transition if desired.  Indeed, a higher-order wrapper
 such as those that implement entry and exit actions could be
-used for this purpose, or to implement any more sophisticated
+used for this purpose, or to implement a more sophisticated
 scheme for managing this inner configuration, such as "history".
 
 ### Conclusion
@@ -659,17 +660,18 @@ Our emphasis has been on how to construct transducers
 hierarchically; much existing work on transducers emphasizes
 hooking the output of one transducer to the input of another
 (examples include Edward Kmett's [Data.Machine][]),
-but this style of composition figures not at all into the current work.
+but this sequential style of composition figures not at all into
+the current work.
 
 In a sense we have given a kind of design pattern for writing functions
 with the type `S × I → S × [O]`.  We touched on `[S] × I → S × [O]`
-(in `transduceAll`).  `S × [I] → S × [O]` should be straightforward —
-but what algebraic properties does it have?  And what happens when
+(in `transduceAll`) and `S × [I] → S × [O]` (in `rehearse`) —
+but what other algebraic properties does it have?  And what happens when
 `I` = `O`?
 
 The preponderance of destructuring `let`s in the code examples here suggests
-there might be some monadic (or other higher-order) formulation that
-captures what we're doing.  On the other hand, the problem
+there might be some higher-order formulation that captures what we're doing —
+maybe a monad, possibly even an arrow.  On the other hand, the problem
 of constructing a state machine (or in our case, a modal transducer)
 does not, so far as I've seen, readily lend itself to a combinator approach.
 
@@ -677,7 +679,7 @@ does not, so far as I've seen, readily lend itself to a combinator approach.
 
 There are none yet.  This section will be updated when there are.
 
-A definite next step would be to use functional transducer assemblages as
+A definite next step would be to use nested modal transducer assemblages as
 the basis for constructing a non-trivial reactive program.
 
 Another definite possibility would be the formulation of a framework
