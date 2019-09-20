@@ -8,10 +8,13 @@ What happens if you take [UML state machines][] and make them
 purely functional by following [The Elm Architecture][]?
 
 We call the resulting construction a _nested modal transducer assemblage_.
-"Nested" stresses embedding one transducer in another, as opposed to
-feeding the output of one transducer into the input of another; "modal"
-stresses that each transducer is, like a state machine, in exactly one
-of a finite number of control states at any given time.
+
+The term "transducer" is adopted from automata theory and is basically
+unrelated to [transducers in Clojure][] or [SRFI-171][];
+"nested" stresses embedding one transducer in another, as opposed to
+feeding the output of one transducer into the input of another; and
+"modal" stresses that each transducer is, like a state machine, in exactly
+one of a finite number of control states at any given time.
 
 Code samples in this document are given in a purely functional pseudocode.
 Runnable code for these examples can be found in the accompanying source
@@ -652,9 +655,10 @@ from this article, and consequently, much that could be explored in
 more detail.
 
 Our emphasis has been on how to construct transducers
-hierarchically; a lot of existing work on transducers emphasizes
+hierarchically; much existing work on transducers emphasizes
 hooking the output of one transducer to the input of another
-(e.g. [Data.Machine][]), which figures not at all into this work.
+(examples include Edward Kmett's [Data.Machine][]),
+but this style of composition figures not at all into the current work.
 
 In a sense we have given a kind of design pattern for writing functions
 with the type `S × I → S × [O]`.  We touched on `[S] × I → S × [O]`
@@ -739,5 +743,7 @@ _Mr. Do_.
 [RAII]: https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization
 [theory and practice of folds]: https://en.wikipedia.org/wiki/Fold_(higher-order_function)
 [XState]: https://xstate.js.org/docs/
+[transducers in Clojure]: https://clojure.org/reference/transducers
+[SRFI-171]: https://srfi.schemers.org/srfi-171/srfi-171.html
 [Data.Machine]: http://github.com/ekmett/machines/
 [Statecharts]: http://www.inf.ed.ac.uk/teaching/courses/seoc/2005_2006/resources/statecharts.pdf
