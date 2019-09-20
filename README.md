@@ -1,22 +1,23 @@
 Nested Modal Transducers
 ========================
 
-*Final draft*
-
 An experiment in reactive framework design that tries to answer the question:
 What happens if you take [UML state machines][] and make them
 purely functional by following [The Elm Architecture][]?
 
 We call the resulting construction a _nested modal transducer assemblage_.
 
-The term "transducer" is adopted from automata theory and is basically
-unrelated to [transducers in Clojure][] or [SRFI-171][];
+"Transducer" is taken from automata theory and is basically
+unrelated to what's called a transducer
+[in Clojure](https://clojure.org/reference/transducers)
+or [in Scheme](https://srfi.schemers.org/srfi-171/srfi-171.html);
 "nested" stresses embedding one transducer in another, as opposed to
 feeding the output of one transducer into the input of another; and
 "modal" stresses that each transducer is, like a state machine, in exactly
 one of a finite number of control states at any given time.
 
-Code samples in this document are given in a purely functional pseudocode.
+Code samples in this document are given in a purely functional pseudocode
+that may look vaguely like Haskell, but the resemblance is only skin-deep.
 Runnable code for these examples can be found in the accompanying source
 files:
 
@@ -743,7 +744,5 @@ _Mr. Do_.
 [RAII]: https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization
 [theory and practice of folds]: https://en.wikipedia.org/wiki/Fold_(higher-order_function)
 [XState]: https://xstate.js.org/docs/
-[transducers in Clojure]: https://clojure.org/reference/transducers
-[SRFI-171]: https://srfi.schemers.org/srfi-171/srfi-171.html
 [Data.Machine]: http://github.com/ekmett/machines/
 [Statecharts]: http://www.inf.ed.ac.uk/teaching/courses/seoc/2005_2006/resources/statecharts.pdf
