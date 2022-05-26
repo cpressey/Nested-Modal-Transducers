@@ -1,6 +1,12 @@
 Nested Modal Transducers
 ========================
 
+_See also:_ [Cosmos Boulders](https://github.com/catseye/Cosmos-Boulders#readme)
+∘ [Rux Rolli](https://github.com/catseye/Rux-Rolli#readme)
+∘ [Destructorizers](https://github.com/cpressey/Destructorizers#readme)
+
+- - - -
+
 An experiment in reactive framework design that tries to answer the question:
 What happens if you take [UML state machines][] and make them
 purely functional by following [The Elm Architecture][]?
